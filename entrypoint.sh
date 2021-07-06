@@ -51,6 +51,7 @@ step() {
 }
 
 step "Capturing screenshots"
-npm install 
+
+npm install
 npm run percy:test
 # lhci autorun
