@@ -122,7 +122,10 @@ theme_id="$(
     | sed -e 's/\[//g' -e 's/\]//g'
 )"
 
-theme configure --env="lighthouse-ci" --dir "$theme_root" --themeid="$theme_id" --no-ignore \
+pwd
+ls -al
+
+theme configure --env="lighthouse-ci" --themeid="$theme_id" --no-ignore \
   &> "$errlog" && rm "$errlog"
 # Getting the theme_id from the theme_name
 
@@ -147,8 +150,7 @@ step "Deploying ephemeral theme"
 #shopify login --store "$SHOP_STORE" --password="$SHOPIFY_PASSWORD"  
 #shopify store
 # &> "$errlog" && rm "$errlog"
-pwd
-ls -al
+
 #shopify theme push -i "$theme_id" --json  \
 # &> "$errlog" && rm "$errlog"
 
