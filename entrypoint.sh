@@ -96,11 +96,6 @@ username="$SHOP_APP_ID"
 password="$SHOP_APP_PASSWORD"
 host="https://$SHOP_STORE"
 errlog="$(mktemp)"
-mkdir ~/.config/shopify/
-cat <<-EOF > ~/.config/shopify/config
-  [analytics]
-  enabled = false
-EOF
 
 # Use the $SHOP_PASSWORD defined as a Github Secret for password protected stores.
 [[ -z ${SHOP_PASSWORD+x} ]] && shop_password='' || shop_password="$SHOP_PASSWORD"
@@ -148,7 +143,7 @@ files_to_remove="$(
 step "Deploying ephemeral theme"
 # &> "$errlog" && rm "$errlog"
 
-shopify version
+# shopify version
 #shopify login --store "$SHOP_STORE" --password="$SHOPIFY_PASSWORD"  
 #shopify store
 # &> "$errlog" && rm "$errlog"
