@@ -1,8 +1,6 @@
 FROM node:14
 
 # Install dependencies
-RUN apt-get update && \
-      apt-get -y install sudo jq
 
 ###
 # Chrome in Docker fix
@@ -21,7 +19,7 @@ ENV npm_config_prefix="$GITHUB_WORKSPACE/.node"
 RUN mkdir -p "$npm_config_prefix" \
   && chmod -R 777 "$npm_config_prefix" \
   && umask 000 \
-  && npm install -g @lhci/cli@0.7.x puppeteer
+  && npm install -g puppeteer
 
 COPY entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
