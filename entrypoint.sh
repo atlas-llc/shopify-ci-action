@@ -126,16 +126,16 @@ theme configure --env="lighthouse-ci" --dir "$theme_root" --themeid="$theme_id" 
 # Getting the theme_id from the theme_name
 
 export THEMEKIT_THEME_ID="$theme_id"
-step "Finding extra files"
-files_to_remove="$(
- cd $theme_root && find * -type f -print \
-  | grep -E "^assets/(.*)liquid" \
-  | sed 's/.liquid//' \
-  | xargs
-)"
-step "Deleting extra files"
-cd $theme_root && rm -f "$files_to_remove" \
-  &> "$errlog" && rm "$errlog"
+# step "Finding extra files"
+# files_to_remove="$(
+#  find * -type f -print \
+#   | grep -E "^assets/(.*)liquid" \
+#   | sed 's/.liquid//' \
+#   | xargs
+# )"
+# step "Deleting extra files"
+# rm -f "$files_to_remove" \
+# &> "$errlog" && rm "$errlog"
   
 # Files must be uploaded in a certain order otherwise Theme Kit will
 # complain about using section files before they are defined.
