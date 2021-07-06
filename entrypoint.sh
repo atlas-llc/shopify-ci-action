@@ -141,7 +141,8 @@ files_to_remove="$(
   | xargs
 )"
 
-rm -f "$files_to_remove"
+cd $theme_root && rm -f "$files_to_remove" \
+  &> "$errlog" && rm "$errlog"
 # Files must be uploaded in a certain order otherwise Theme Kit will
 # complain about using section files before they are defined.
 step "Deploying ephemeral theme"
