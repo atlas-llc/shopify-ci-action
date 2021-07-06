@@ -120,16 +120,17 @@ theme_name="lhci/$commit_sha"
 # We're creating a fake theme here to bypass theme-kit validation. We're going to remove those files.
 # theme_placeholder_dir="$(mktemp -d)"
 
-theme configure --env="lighthouse-ci" --dir "$THEME_ROOT" --themeid="$theme_id" --no-ignore \
-  &> "$errlog" && rm "$errlog"
-# Getting the theme_id from the theme_name
 theme_id="$(
   theme get --list \
-    | grep "percy" \
+    | grep "percy/test" \
     | tail -n 1 \
     | cut -d ' ' -f3 \
     | sed -e 's/\[//g' -e 's/\]//g'
 )"
+
+theme configure --env="lighthouse-ci" --dir "$THEME_ROOT" --themeid="$theme_id" --no-ignore \
+  &> "$errlog" && rm "$errlog"
+# Getting the theme_id from the theme_name
 
 export THEMEKIT_THEME_ID="$theme_id"
 step "Deleting extra files"
