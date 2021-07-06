@@ -31,7 +31,8 @@
 
 # Add global node bin to PATH (from the Dockerfile)
 export PATH="$PATH:$npm_config_prefix/bin"
-
+export SHOPIFY_PASSWORD="$SHOP_APP_PASSWORD"
+export SHOPIFY_SHOP="$SHOP_STORE"
 # END of GitHub Action Specific Code
 ####################################################################
 
@@ -95,6 +96,11 @@ username="$SHOP_APP_ID"
 password="$SHOP_APP_PASSWORD"
 host="https://$SHOP_STORE"
 errlog="$(mktemp)"
+mkdir ~/.config/shopify/
+cat <<-EOF > ~/.config/shopify/config
+  [analytics]
+  enabled = false
+EOF
 
 # Use the $SHOP_PASSWORD defined as a Github Secret for password protected stores.
 [[ -z ${SHOP_PASSWORD+x} ]] && shop_password='' || shop_password="$SHOP_PASSWORD"
@@ -127,12 +133,12 @@ theme configure --env="lighthouse-ci" --dir "$theme_root" --themeid="$theme_id" 
 
 export THEMEKIT_THEME_ID="$theme_id"
 # step "Finding extra files"
-# files_to_remove="$(
-#  find * -type f -print \
-#   | grep -E "^assets/(.*)liquid" \
-#   | sed 's/.liquid//' \
-#   | xargs
-# )"
+files_to_remove="$(
+ find * -type f -print \
+  | grep -E "^assets/(.*)liquid" \
+  | sed 's/.liquid//' \
+  | xargs
+)"
 # step "Deleting extra files"
 # rm -f "$files_to_remove" \
 # &> "$errlog" && rm "$errlog"
@@ -140,7 +146,19 @@ export THEMEKIT_THEME_ID="$theme_id"
 # Files must be uploaded in a certain order otherwise Theme Kit will
 # complain about using section files before they are defined.
 step "Deploying ephemeral theme"
-theme --env="lighthouse-ci" --dir "$theme_root" deploy 
+# &> "$errlog" && rm "$errlog"
+
+shopify version
+#shopify login --store "$SHOP_STORE" --password="$SHOPIFY_PASSWORD"  
+#shopify store
+# &> "$errlog" && rm "$errlog"
+pwd
+ls -al
+#shopify theme push -i "$theme_id" --json  \
+# &> "$errlog" && rm "$errlog"
+
+theme --env="lighthouse-ci" deploy \
+ #  &> "$errlog" && rm "$errlog"
 # for folder in assets locales snippets layout sections templates config; do
   # log theme --env="lighthouse-ci" --dir="$theme_root" deploy $folder
   # theme --env="lighthouse-ci" --dir="$theme_root" deploy $folder \

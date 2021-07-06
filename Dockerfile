@@ -1,4 +1,4 @@
-FROM node:14
+FROM timbru31/ruby-node:2.7-14
 
 # Install dependencies
 RUN apt-get update && \
@@ -22,6 +22,8 @@ RUN mkdir -p "$npm_config_prefix" \
   && chmod -R 777 "$npm_config_prefix" \
   && umask 000 \
   && npm install -g @lhci/cli@0.7.x puppeteer
+
+RUN gem install shopify-cli
 
 COPY entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
