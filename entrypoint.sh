@@ -11,6 +11,7 @@
 #
 # Here, we're translating the GitHub action input arguments into environment variables
 # for this scrip to use.
+[[ -n "$INPUT_PERCY_TOKEN" ]]            && export PERCY_TOKEN="$INPUT_PERCY_TOKEN"
 [[ -n "$INPUT_APP_ID" ]]            && export SHOP_APP_ID="$INPUT_APP_ID"
 [[ -n "$INPUT_APP_PASSWORD" ]]      && export SHOP_APP_PASSWORD="$INPUT_APP_PASSWORD"
 [[ -n "$INPUT_STORE" ]]             && export SHOP_STORE="$INPUT_STORE"
@@ -81,7 +82,8 @@ cleanup() {
   return $1
 }
 
-trap 'cleanup $?' EXIT
+# trap 'cleanup $?' EXIT
+pwd
 
 if ! is_installed lhci; then
   step "Installing Lighthouse CI"
@@ -111,45 +113,43 @@ log "Will run Lighthouse CI on $host"
 step "Creating ephemeral theme"
 export THEMEKIT_PASSWORD="$SHOP_APP_PASSWORD"
 export THEMEKIT_STORE="$SHOP_STORE"
-commit_sha="$(echo ${GITHUB_SHA:-$(git rev-parse --ref HEAD)} | head -c 8)"
+# commit_sha="$(echo ${GITHUB_SHA:-$(git rev-parse --ref HEAD)} | head -c 8)"
+export commit_sha=test
 theme_name="lhci/$commit_sha"
 
 # We're creating a fake theme here to bypass theme-kit validation. We're going to remove those files.
-theme_placeholder_dir="$(mktemp -d)"
-theme new --env="lighthouse-ci" --dir "$theme_placeholder_dir" --no-ignore --name="$theme_name" \
-  &> "$errlog" && rm "$errlog"
+# theme_placeholder_dir="$(mktemp -d)"
 
+theme configure --env="lighthouse-ci" --dir "$THEME_ROOT" --themeid="$theme_id" --no-ignore \
+  &> "$errlog" && rm "$errlog"
 # Getting the theme_id from the theme_name
 theme_id="$(
   theme get --list \
-    | grep "$theme_name" \
+    | grep "percy" \
     | tail -n 1 \
     | cut -d ' ' -f3 \
     | sed -e 's/\[//g' -e 's/\]//g'
 )"
 
 export THEMEKIT_THEME_ID="$theme_id"
-
-step "Deleting placeholder files"
-placeholder_files="$(
-  cd $theme_placeholder_dir &&  \
-  find * -type f -print \
-  | grep -E -v "^config/" \
-  | grep -E -v "^layout/theme.liquid" \
-  | grep -E -v "^templates/gift_card.liquid" \
+step "Deleting extra files"
+files_to_remove="$(
+ cd $theme_root && find * -type f -print \
+  | grep -E "^assets/(.*)liquid" \
+  | sed 's/.liquid//' \
   | xargs
 )"
-theme --env="lighthouse-ci" --dir "$theme_placeholder_dir" remove $placeholder_files \
-  &> "$errlog" && rm "$errlog"
 
+rm -f "$files_to_remove"
 # Files must be uploaded in a certain order otherwise Theme Kit will
 # complain about using section files before they are defined.
 step "Deploying ephemeral theme"
-for folder in assets locales snippets layout sections templates config; do
-  log theme --env="lighthouse-ci" --dir="$theme_root" deploy $folder
-  theme --env="lighthouse-ci" --dir="$theme_root" deploy $folder \
-    &> "$errlog" && rm "$errlog"
-done
+theme --env="lighthouse-ci" --dir "$THEME_ROOT" deploy 
+# for folder in assets locales snippets layout sections templates config; do
+  # log theme --env="lighthouse-ci" --dir="$theme_root" deploy $folder
+  # theme --env="lighthouse-ci" --dir="$theme_root" deploy $folder \
+    # &> "$errlog" && rm "$errlog"
+# done
 
 step "Configuring Lighthouse CI"
 
@@ -218,5 +218,8 @@ module.exports = async (browser) => {
 };
 EOF
 
-step "Running Lighthouse CI"
-lhci autorun
+step "Capturing screenshots"
+cd $THEME_ROOT
+npm install 
+npm run percy:test
+# lhci autorun
