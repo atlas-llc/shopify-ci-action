@@ -60,13 +60,6 @@ cleanup() {
     cat "$errlog"
   fi
 
-  if [[ -n "${theme_id+x}" ]]; then
-    step "Disposing ephemeral theme"
-    curl -s -X DELETE \
-      -u $username:$password \
-      "$host/admin/api/2021-04/themes/$theme_id.json"
-  fi
-
   if [[ -f "lighthouserc.yml" ]]; then
     rm "lighthouserc.yml"
   fi
@@ -82,7 +75,7 @@ cleanup() {
   return $1
 }
 
-# trap 'cleanup $?' EXIT
+trap 'cleanup $?' EXIT
 pwd
 
 if ! is_installed lhci; then
@@ -106,7 +99,7 @@ errlog="$(mktemp)"
 # Use the $SHOP_PASSWORD defined as a Github Secret for password protected stores.
 [[ -z ${SHOP_PASSWORD+x} ]] && shop_password='' || shop_password="$SHOP_PASSWORD"
 
-theme_root="$THEME_ROOT"
+theme_root="${THEME_ROOT:-.}"
 
 log "Will run Lighthouse CI on $host"
 
@@ -128,25 +121,26 @@ theme_id="$(
     | sed -e 's/\[//g' -e 's/\]//g'
 )"
 
-theme configure --env="lighthouse-ci" --dir "$THEME_ROOT" --themeid="$theme_id" --no-ignore \
+theme configure --env="lighthouse-ci" --dir "$theme_root" --themeid="$theme_id" --no-ignore \
   &> "$errlog" && rm "$errlog"
 # Getting the theme_id from the theme_name
 
 export THEMEKIT_THEME_ID="$theme_id"
-step "Deleting extra files"
+step "Finding extra files"
 files_to_remove="$(
  cd $theme_root && find * -type f -print \
   | grep -E "^assets/(.*)liquid" \
   | sed 's/.liquid//' \
   | xargs
 )"
-
+step "Deleting extra files"
 cd $theme_root && rm -f "$files_to_remove" \
   &> "$errlog" && rm "$errlog"
+  
 # Files must be uploaded in a certain order otherwise Theme Kit will
 # complain about using section files before they are defined.
 step "Deploying ephemeral theme"
-theme --env="lighthouse-ci" --dir "$THEME_ROOT" deploy 
+theme --env="lighthouse-ci" --dir "$theme_root" deploy 
 # for folder in assets locales snippets layout sections templates config; do
   # log theme --env="lighthouse-ci" --dir="$theme_root" deploy $folder
   # theme --env="lighthouse-ci" --dir="$theme_root" deploy $folder \
@@ -221,7 +215,7 @@ module.exports = async (browser) => {
 EOF
 
 step "Capturing screenshots"
-cd $THEME_ROOT
+cd $theme_root
 npm install 
 npm run percy:test
 # lhci autorun
